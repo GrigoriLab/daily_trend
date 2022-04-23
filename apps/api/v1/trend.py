@@ -14,6 +14,6 @@ class TrendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        data = Trend.objects.all()
+        data = Trend.objects.all().order_by('-value')
         df = read_frame(data, fieldnames=['date', 'variable', 'value'])
         return Response(df)
