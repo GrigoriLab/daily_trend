@@ -1,3 +1,5 @@
 Django==3.2.12
 pytrends==4.8.0
 SQLAlchemy==1.4.35
+djangorestframework==3.13.1
+django-pandas==0.6.6
