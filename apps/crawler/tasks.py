@@ -1,5 +1,8 @@
 import logging
+import os.path
 
+from celery import shared_task
+from django.conf import settings
 from pytrends.request import TrendReq
 
 import pandas as pd
@@ -10,8 +13,9 @@ from sqlalchemy import create_engine
 logger = logging.getLogger(__name__)
 
 
+@shared_task
 def fetch_trends():
-    df = pd.read_csv('top-search-keywords.csv')
+    df = pd.read_csv(os.path.join(settings.BASE_DIR, 'top-search-keywords.csv'))
     variables = [v[0] for v in df.values.tolist()]
 
     engine = create_engine('sqlite:///db.sqlite3')
