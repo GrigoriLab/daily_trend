@@ -25,5 +25,8 @@ class TrendView(APIView):
             df = df.drop('variable', axis=1)
             df['date'] = pd.to_datetime(df['date']).astype(str)
             df = df.set_index('date').astype(str)
-            df = df.to_dict()['value']
+            # FIXME: As we need to send the response in {datetime: search_interest, datetime: search_interest...} format
+            # we can't actually sort the dict, we need to change the response to format like
+            # [{datetime: search_interest}, {datetime: search_interest}, ...]
+            df = df.sort_values(by='value', ascending=False).to_dict()['value']
         return Response(data=df)

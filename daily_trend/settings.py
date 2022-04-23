@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -79,12 +81,7 @@ WSGI_APPLICATION = 'daily_trend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = {"default": dj_database_url.config()}
 
 
 # Password validation
@@ -171,9 +168,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Yerevan'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+INTERVAL = os.environ.get("INTERVAL")
 CELERY_BEAT_SCHEDULE = {
     'check_for_new_orders': {
         'task': 'apps.crawler.tasks.fetch_trends',
-        'schedule': datetime.timedelta(hours=4),
+        'schedule': datetime.timedelta(minutes=int(INTERVAL) if INTERVAL else 4*60),
     }
 }
+
+FIXTURE_DIRS = (os.path.join(BASE_DIR, "fixtures"),)

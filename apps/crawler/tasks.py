@@ -18,7 +18,12 @@ def fetch_trends():
     df = pd.read_csv(os.path.join(settings.BASE_DIR, 'top-search-keywords.csv'))
     variables = [v[0] for v in df.values.tolist()]
 
-    engine = create_engine('sqlite:///db.sqlite3')
+    user = os.environ.get("POSTGRES_USER")
+    password = os.environ.get("POSTGRES_PASSWORD")
+    host = os.environ.get("POSTGRES_HOST")
+    db_name = os.environ.get("POSTGRES_DB")
+    database_url = f'postgresql://{user}:{password}@{host}:5432/{db_name}'
+    engine = create_engine(database_url)
     pytrends = TrendReq(hl='en-US', tz=360)
     for index in range(0, len(variables), 5):
         # we can get the data for max 5 keywords per request.
@@ -27,7 +32,7 @@ def fetch_trends():
         pytrends.build_payload(kw_list, cat=0, timeframe='now 4-H')
 
         data = pytrends.interest_over_time()
-        data['date'] = data.index.values
+        data = data.reset_index()
         data = data.drop(columns='isPartial')
 
         model_df = pd.melt(data, id_vars='date')

@@ -1,0 +1,53 @@
+services:
+  redis-service:
+    container_name: redi_container
+    image: "redis:alpine"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+    expose:
+      - "6379"
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  server:
+    container_name: celery_server
+    hostname: celeryserver
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-service:
+        condition: service_healthy
+    build:
+      context: ./
+    privileged: true
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    expose:
+      - "8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - INTERVAL=${INTERVAL}
+      - REDIS_HOST=${REDIS_HOST}
+    restart: always
+
+volumes:
+  db:
+    driver: local
