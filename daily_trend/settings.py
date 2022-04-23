@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'apps.crawler',
     'apps.api',
 ]
@@ -150,4 +151,10 @@ LOGGING = {
         "django": {"handlers": ["console"], "level": "INFO"},
         "apps": {"handlers": ["console"], "level": "DEBUG"},
     },
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
 }
