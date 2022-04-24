@@ -60,3 +60,4 @@ Or if the containers are already run:
 ```bash
 docker-compose exec server python manage.py test -v 2
 ```
+
