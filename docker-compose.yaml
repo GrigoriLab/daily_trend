@@ -1,6 +1,6 @@
 services:
   redis-service:
-    container_name: redi_container
+    container_name: redis_container
     image: "redis:alpine"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
