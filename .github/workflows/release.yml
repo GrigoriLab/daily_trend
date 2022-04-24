@@ -1,23 +1,14 @@
-name: Build docker image and run testcases
+name: Deploy to EKS
 on:
   push:
     branches:
-      - '!master'
-  pull_request:
+      - master
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build the stack and test
-        env:
-          POSTGRES_USER: "postgres"
-          POSTGRES_PASSWORD: "postgres"
-          POSTGRES_HOST: "postgres"
-          POSTGRES_DB: "postgres"
-          REDIS_HOST: "redis-service"
-          DATABASE_URL: "postgres://postgres:postgres@postgres:5432/postgres"
-        run: docker-compose run server python manage.py test -v 2
+      - name: Check out repository code
+        uses: actions/checkout@v2
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -27,12 +18,19 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Build, tag and push the api image to Amazon ECR
+      - name: Build and Deploy
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: dailytrend
         run: |
           IMAGE_TAG=$(echo ${{ github.sha }} | head -c 7)
-          IMAGE_URL=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+          IMAGE_URL=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${IMAGE_TAG}
           docker build -t ${IMAGE_URL} .
           docker push ${IMAGE_URL}
+          sed -i"" -e 's,'IMAGE_URL','"${IMAGE_URL}"',' deployment.yaml
+      - name: Trigger deploy
+        uses: resemble-ai/kubernetes-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_BASE_64_ENCODED }}
+        with:
+          args: apply -f deployment.yaml
